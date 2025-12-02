@@ -56,4 +56,11 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+
+
+    implementation("androidx.cardview:cardview:1.0.0")
+    implementation("androidx.coordinatorlayout:coordinatorlayout:1.2.0")
+    implementation("androidx.cardview:cardview:1.0.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
 }

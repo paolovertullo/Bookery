@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Bookery" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Bookery" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Personalizzazioni -->
+    </style>
+
 </resources>
