@@ -63,4 +63,14 @@ dependencies {
     implementation("androidx.coordinatorlayout:coordinatorlayout:1.2.0")
     implementation("androidx.cardview:cardview:1.0.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("io.coil-kt:coil-compose:2.4.0")
+    // Navigation Compose
+    implementation("androidx.navigation:navigation-compose:2.8.4")
+
+    // ViewModel (se usi LibraryViewModel in Compose)
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+
+
+
+
 }
