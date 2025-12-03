@@ -17,6 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import com.bookery.R
 import com.bookery.ui.library.LibraryScreen
 import com.bookery.ui.vocabulary.VocabularyScreen
+import com.bookery.HomeActivity
 
 sealed class BottomDest(val route: String, val label: String) {
     object Home : BottomDest("home", "Home")
@@ -80,9 +81,13 @@ fun HomeRoot() {
             modifier = Modifier.padding(padding)
         ) {
             composable(BottomDest.Home.route) { HomeScreen() }
-            composable(BottomDest.Library.route) { LibraryScreen() }
+            composable(BottomDest.Library.route) {
+                val version by HomeActivity.progressVersion
+                LibraryScreen(progressVersion = version)
+            }
             composable(BottomDest.Vocabulary.route) { VocabularyScreen() }
         }
+
     }
 
     if (showSettingsDialog.value) {

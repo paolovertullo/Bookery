@@ -35,6 +35,14 @@ import org.json.JSONObject
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.runtime.DisposableEffect
+import com.bookery.data.local.BookProgressStore
+import com.bookery.ui.reader.ReaderActivity
+import androidx.compose.runtime.LaunchedEffect
+import com.bookery.HomeActivity.Companion.progressVersion
 
 // ---------- STORAGE SEMPLICE SU FILE ----------
 
@@ -82,81 +90,27 @@ private class LibraryStorage(private val context: android.content.Context) {
 // ---------- UI ----------
 
 @Composable
-fun LibraryScreen() {
+fun LibraryScreen(progressVersion: Int) {
     val context = LocalContext.current
     val parser = remember { EpubParser(context) }
     val storage = remember { LibraryStorage(context) }
 
-    var books by remember {
-        mutableStateOf(storage.loadBooks())
-    }
+    var books by remember { mutableStateOf(storage.loadBooks()) }
 
-
-//    var books by remember {
-//        mutableStateOf(
-//            storage.loadBooks().ifEmpty {
-//                listOf(
-//                    Book(
-//                        id = "sample_1",
-//                        title = "La Bella e la Bestia",
-//                        author = "J.M. Leprince de Beaumont",
-//                        language = "IT"
-//                    ),
-//                    Book(
-//                        id = "sample_2",
-//                        title = "To Build a Fire",
-//                        author = "Jack London",
-//                        language = "EN"
-//                    )
-//                )
-//            }
-//        )
-//    }
-
-    val openDocumentLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-            if (uri != null) {
-                val localFile = copyEpubToAppFolder(context.filesDir, uri, context.contentResolver)
-                if (localFile != null) {
-                    val parsedBook: Book? = parser.parse(localFile)
-                    val newBook = parsedBook ?: Book(
-                        id = localFile.absolutePath,
-                        title = localFile.nameWithoutExtension,
-                        author = "Sconosciuto",
-                        language = "EN",
-                        coverUrl = null
-                    )
-                    val updated = books + newBook
-                    books = updated
-                    storage.saveBooks(updated)
-                }
-            }
+    // ricalcola i progressi ogni volta che cambia progressVersion o books
+    val progressMap: Map<String, Float> =
+        remember(progressVersion, books) {
+            books.associate { it.id to BookProgressStore.getProgress(context, it.id) }
         }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Biblioteca") },
-                actions = {
-                    IconButton(
-                        onClick = {
-                            openDocumentLauncher.launch(arrayOf("application/epub+zip"))
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Aggiungi epub"
-                        )
-                    }
-                }
-            )
-        }
+        topBar = { /* come prima */ }
     ) { padding ->
         if (books.isEmpty()) {
             Box(
                 modifier = Modifier
                     .padding(padding)
-                    .fillMaxSize(),
+                    .fillMaxSize()
             ) {
                 Text(
                     text = "Nessun libro presente, carica un EPUB.",
@@ -166,11 +120,62 @@ fun LibraryScreen() {
         } else {
             LibraryList(
                 books = books,
-                modifier = Modifier.padding(padding)
+                progressMap = progressMap,
+                modifier = Modifier.padding(padding),
+                onBookClick = { book ->
+                    context.startActivity(ReaderActivity.newIntent(context, book.id))
+                }
             )
         }
     }
+}
 
+@Composable
+private fun LibraryList(
+    books: List<Book>,
+    progressMap: Map<String, Float>,
+    modifier: Modifier = Modifier,
+    onBookClick: (Book) -> Unit
+) {
+    LazyColumn(modifier = modifier.fillMaxSize()) {
+        items(books) { book ->
+            val progress = progressMap[book.id] ?: 0f
+            BookRow(book = book, progress = progress, onClick = { onBookClick(book) })
+        }
+    }
+}
+
+@Composable
+private fun BookRow(book: Book, progress: Float, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+            .clickable { onClick() }
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row {
+                if (book.coverUrl != null) {
+                    Image(
+                        painter = rememberAsyncImagePainter(book.coverUrl),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(56.dp)
+                            .padding(end = 12.dp)
+                    )
+                }
+                Column {
+                    Text(book.title)
+                    Text(book.author)
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            LinearProgressIndicator(
+                progress = progress,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
 }
 
 /**
@@ -238,5 +243,6 @@ private fun BookRow(book: Book) {
 @Preview(showBackground = true)
 @Composable
 private fun LibraryScreenPreview() {
-    BookeryTheme { LibraryScreen() }
+    BookeryTheme { LibraryScreen(progressVersion = 0) }
 }
+
